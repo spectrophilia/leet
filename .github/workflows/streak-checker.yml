@@ -1,0 +1,85 @@
+name: PR Streak Tracker
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  streak-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install dependencies
+      run: npm install @octokit/rest
+
+    - name: Track PR Streak
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        node -e "
+        const { Octokit } = require('@octokit/rest');
+        const fs = require('fs');
+        const path = '.github/streaks.json';
+
+        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+        const today = new Date().toISOString().split('T')[0];
+        const repo = process.env.GITHUB_REPOSITORY;
+        const [owner, repoName] = repo.split('/');
+        const prUser = '${{ github.actor }}';
+
+        // Load or initialize streaks data
+        let streaks = {};
+        if (fs.existsSync(path)) {
+          streaks = JSON.parse(fs.readFileSync(path, 'utf8'));
+        }
+
+        // Update the streak for the user
+        const userStreak = streaks[prUser] || { streak: 0, lastDate: '' };
+        const lastDate = new Date(userStreak.lastDate);
+        const streakDate = new Date(today);
+        streakDate.setDate(streakDate.getDate() - 1);
+
+        if (userStreak.lastDate === today) {
+          console.log('PR already tracked for today.');
+        } else if (lastDate.toISOString().split('T')[0] === streakDate.toISOString().split('T')[0]) {
+          userStreak.streak++;
+        } else {
+          userStreak.streak = 1;
+        }
+
+        userStreak.lastDate = today;
+        streaks[prUser] = userStreak;
+
+        // Save streak data back to the file
+        fs.writeFileSync(path, JSON.stringify(streaks, null, 2));
+
+        // Commit updated streaks.json
+        const commitMessage = 'Update PR streaks';
+        require('child_process').execSync(\`
+          git config --global user.email "action@github.com" &&
+          git config --global user.name "GitHub Action" &&
+          git add ${path} &&
+          git commit -m "\${commitMessage}" &&
+          git push
+        \`);
+
+        // Add a comment to the PR
+        const prNumber = ${{ github.event.number }};
+        const streakMessage = \`🎉 Congrats, \${prUser}! You're on a streak of \${userStreak.streak} day(s)! Keep it going! 🎉\`;
+
+        octokit.issues.createComment({
+          owner,
+          repo: repoName,
+          issue_number: prNumber,
+          body: streakMessage,
+        });
+        "
+
