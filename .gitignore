@@ -169,3 +169,55 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Python temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.eggs
+*.log
+
+# Virtual environment directories
+env/
+venv/
+ENV/
+.VENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# C binary and object files
+*.o
+*.out
+*.exe
+
+# Static libraries
+*.a
+
+# Shared libraries
+*.so
+*.dll
+*.dylib
+
+# Build directories
+build/
+dist/
+*.make
+CMakeFiles/
+CMakeCache.txt
+
+# Debug files
+*.dSYM/
+*.core
+
+# Temporary and OS files
+*.tmp
+*.swp
+*.swo
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
