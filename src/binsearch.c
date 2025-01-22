@@ -22,12 +22,15 @@ int binsearch(int *arr, int n, int target) {
 }
 
 int main() {
-  int *arr = range(0, 10, 1);
+  int *arr = rand_ascending(100);
+  int orig_index = rand_number(0, 99);
+  printf("index to be searched %d, number to be searched %d\n\n", orig_index, arr[orig_index]);
 
   for (int i=0; i<10; i++) 
     printf("%d ", arr[i]);
   printf("\n");
-  int index = binsearch(arr, 10, 4);
+
+  int index = binsearch(arr, 10, arr[orig_index]);
   if (index < 0)
     printf("search element not found in the array\n");
   else
